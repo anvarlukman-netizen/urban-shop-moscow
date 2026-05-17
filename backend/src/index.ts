@@ -7,6 +7,7 @@ import { validateTelegramInitData } from './middleware/validateTgInit';
 import productsRouter from './routes/products';
 import ordersRouter from './routes/orders';
 import favouritesRouter from './routes/favourites';
+import reviewsRouter from './routes/reviews';
 import { initBot, getBot } from './bot/notifications';
 import { setupBotCommands } from './bot/commands';
 
@@ -31,6 +32,7 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 app.use('/api/products', validateTelegramInitData, productsRouter);
 app.use('/api/orders', validateTelegramInitData, ordersRouter);
 app.use('/api/favourites', validateTelegramInitData, favouritesRouter);
+app.use('/api/reviews', validateTelegramInitData, reviewsRouter);
 
 // Инициализируем Telegram бота
 const botToken = process.env.BOT_TOKEN;

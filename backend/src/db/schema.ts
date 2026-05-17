@@ -98,6 +98,26 @@ export function parseOrder(row: typeof orders.$inferSelect): ParsedOrder {
   return { ...row, items: JSON.parse(row.items) };
 }
 
+export const reviews = sqliteTable('reviews', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  telegramId: text('telegram_id').notNull(),
+  telegramUsername: text('telegram_username').default(''),
+  customerName: text('customer_name').notNull(),
+  rating: integer('rating').notNull(),       // 1–5
+  text: text('text').notNull(),
+  createdAt: text('created_at').default(sql`(datetime('now'))`),
+});
+
+export interface ReviewRow {
+  id: number;
+  telegramId: string;
+  telegramUsername: string | null;
+  customerName: string;
+  rating: number;
+  text: string;
+  createdAt: string | null;
+}
+
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
 export type Order = typeof orders.$inferSelect;

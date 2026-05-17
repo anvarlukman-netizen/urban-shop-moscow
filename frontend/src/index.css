@@ -571,3 +571,22 @@ h1, h2, h3 {
   box-shadow: none;
   cursor: not-allowed;
 }
+
+.btn-secondary {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--brand-border, #F3D5E4);
+  background: transparent;
+  color: var(--brand-primary, #BE185D);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary:active {
+  background: var(--brand-bg-soft, #FDF2F8);
+}
