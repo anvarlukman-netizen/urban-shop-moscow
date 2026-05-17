@@ -46,6 +46,16 @@ export interface OrderItem {
   image: string;
 }
 
+export interface Review {
+  id: number;
+  telegramId: string;
+  telegramUsername: string | null;
+  customerName: string;
+  rating: number;
+  text: string;
+  createdAt: string | null;
+}
+
 export type Category = 'all' | 'sneakers' | 'clothing' | 'bags';
 export type Gender = 'all' | 'male' | 'female';
 export type SortOption = 'new' | 'hot' | 'price_asc' | 'price_desc';

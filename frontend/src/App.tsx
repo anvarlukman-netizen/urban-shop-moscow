@@ -8,6 +8,7 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Favourites from './pages/Favourites';
 import Profile from './pages/Profile';
+import Reviews from './pages/Reviews';
 
 export default function App() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function App() {
     { path: '/catalog', icon: <CatalogIcon />, label: 'Каталог' },
     { path: '/favourites', icon: <HeartIcon />, label: 'Избранное' },
     { path: '/cart', icon: <CartIcon count={cartCount} />, label: 'Корзина' },
-    { path: '/profile', icon: <ProfileIcon />, label: 'Профиль' },
+    { path: '/reviews', icon: <ReviewsIcon />, label: 'Отзывы' },
   ];
 
   const hideNav = location.pathname.startsWith('/product/') ||
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/favourites" element={<Favourites />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/reviews" element={<Reviews />} />
       </Routes>
 
       {!hideNav && (
@@ -104,11 +106,10 @@ function CartIcon({ count }: { count: number }) {
   );
 }
 
-function ProfileIcon() {
+function ReviewsIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   );
 }

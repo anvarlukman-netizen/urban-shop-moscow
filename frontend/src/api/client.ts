@@ -1,5 +1,5 @@
 import { tg } from '../hooks/useTelegram';
-import type { Product, Order } from '../types';
+import type { Product, Order, Review } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -48,5 +48,14 @@ export const api = {
   toggleFavourite: (productId: number) =>
     request<{ action: 'added' | 'removed' }>(`/favourites/${productId}`, {
       method: 'POST',
+    }),
+
+  // Reviews
+  getReviews: () => request<Review[]>('/reviews'),
+
+  createReview: (data: { customerName: string; rating: number; text: string }) =>
+    request<Review>('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(data),
     }),
 };
