@@ -9,6 +9,9 @@ export const products = sqliteTable('products', {
   gender: text('gender').notNull(),
   price: integer('price').notNull(),
   description: text('description').default(''),
+  article: text('article').default(''),
+  colorway: text('colorway').default(''),
+  material: text('material').default(''),
   images: text('images').default('[]'),          // JSON string
   sizes: text('sizes').default('[]'),             // JSON string
   stockBySize: text('stock_by_size').default('{}'), // JSON string
@@ -50,6 +53,9 @@ export interface ProductRow {
   gender: string;
   price: number;
   description: string | null;
+  article: string | null;
+  colorway: string | null;
+  material: string | null;
   images: string[];
   sizes: (string | number)[];
   stockBySize: Record<string, number>;
@@ -65,6 +71,9 @@ export function parseProduct(row: typeof products.$inferSelect): ProductRow {
     images: JSON.parse(row.images ?? '[]'),
     sizes: JSON.parse(row.sizes ?? '[]'),
     stockBySize: JSON.parse(row.stockBySize ?? '{}'),
+    article: row.article ?? '',
+    colorway: row.colorway ?? '',
+    material: row.material ?? '',
   };
 }
 

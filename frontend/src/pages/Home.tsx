@@ -1,212 +1,194 @@
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../api/client';
-import type { Product } from '../types';
 import { useTelegram } from '../hooks/useTelegram';
+
+interface Brand { key: string; label: string; sub?: { key: string; label: string }[] }
+
+const BRANDS: Brand[] = [
+  { key: 'Nike',         label: 'NIKE' },
+  { key: 'New Balance',  label: 'NEW BALANCE' },
+  { key: 'Adidas',       label: 'ADIDAS' },
+  { key: 'On Cloud',     label: 'ON CLOUD' },
+  { key: 'Golden Goose', label: 'GOLDEN GOOSE' },
+  { key: 'Premiata',     label: 'PREMIATA' },
+  { key: 'Lacoste',      label: 'LACOSTE' },
+];
 
 export default function Home() {
   const navigate = useNavigate();
   const { user } = useTelegram();
 
-  const { data: newProducts } = useQuery({
-    queryKey: ['products', 'new'],
-    queryFn: () => api.getProducts({ isNew: 'true', limit: '10' }),
-  });
-
-  const { data: hotProducts } = useQuery({
-    queryKey: ['products', 'hot'],
-    queryFn: () => api.getProducts({ isHot: 'true', limit: '10' }),
-  });
-
-  const categories = [
-    { key: 'sneakers', label: '👟 Кроссовки' },
-    { key: 'clothing', label: '👕 Одежда' },
-    { key: 'bags', label: '👜 Сумки' },
-  ];
-
   return (
     <div className="page-scroll">
-      {/* Приветствие */}
-      <div style={{ padding: '16px 16px 8px' }}>
-        <div style={{ fontSize: 13, color: 'var(--tgui--hint_color, #999)', marginBottom: 4 }}>
-          {user ? `Привет, ${user.first_name}! 👋` : 'Добро пожаловать!'}
+
+      {/* Hero */}
+      <div style={{ padding: '24px 16px 20px', borderBottom: '1px solid #E0E0E0' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#888888', marginBottom: 6 }}>
+          {user ? `Привет, ${user.first_name}` : 'Добро пожаловать'}
         </div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--tgui--text_color, #000)' }}>
-          Urban Shop Moscow
+        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 42, lineHeight: 0.95, letterSpacing: '0.02em', color: '#0A0A0A', marginBottom: 8 }}>
+          Urban Shop<br />Moscow
         </div>
-        <div style={{ fontSize: 13, color: 'var(--tgui--hint_color, #999)', marginTop: 2 }}>
-          Оригинальные кроссовки, одежда и сумки
+        <div style={{ fontSize: 12, color: '#888888', letterSpacing: '0.5px' }}>
+          Место где выбирают стиль
         </div>
       </div>
 
       {/* Поиск */}
-      <div style={{ padding: '8px 16px 16px' }}>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid #E0E0E0' }}>
         <button
           onClick={() => navigate('/catalog?focus=search')}
           style={{
-            width: '100%',
-            padding: '11px 14px',
-            borderRadius: 12,
-            border: 'none',
-            background: 'var(--tgui--secondary_bg_color, #f4f4f5)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            color: 'var(--tgui--hint_color, #999)',
-            fontSize: 15,
-            cursor: 'pointer',
-            textAlign: 'left',
+            width: '100%', padding: '12px 14px', border: '1.5px solid #E0E0E0',
+            background: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 8,
+            color: '#888888', fontSize: 13, cursor: 'pointer', textAlign: 'left',
+            fontFamily: "'Inter', sans-serif", borderRadius: 0,
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          Поиск товаров...
+          Поиск по каталогу...
         </button>
       </div>
 
-      {/* Категории */}
-      <div style={{ padding: '0 16px 16px' }}>
-        <SectionTitle title="Категории" />
-        <div style={{ display: 'flex', gap: 10 }}>
-          {categories.map((cat) => (
-            <button
-              key={cat.key}
-              onClick={() => navigate(`/catalog?category=${cat.key}`)}
-              style={{
-                flex: 1,
-                padding: '12px 6px',
-                borderRadius: 12,
-                border: 'none',
-                background: 'var(--tgui--secondary_bg_color, #f4f4f5)',
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--tgui--text_color, #000)',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 4,
-              }}
-            >
-              <span style={{ fontSize: 22 }}>{cat.label.split(' ')[0]}</span>
-              <span>{cat.label.split(' ')[1]}</span>
-            </button>
-          ))}
-        </div>
+      {/* Мужское — бренды */}
+      <div style={{ borderBottom: '1px solid #E0E0E0' }}>
+        <GenderHeader
+          label="Мужское"
+          sub="Men's Collection"
+          dark
+          onAll={() => navigate('/catalog?gender=male')}
+        />
+        <BrandGrid gender="male" navigate={navigate} />
       </div>
 
-      {/* Новинки */}
-      {newProducts && newProducts.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <SectionTitle
-            title="🆕 Новинки"
-            action={{ label: 'Все', onClick: () => navigate('/catalog?isNew=true') }}
-          />
-          <div className="horizontal-scroll">
-            {newProducts.map((p) => (
-              <HorizontalProductCard key={p.id} product={p} onClick={() => navigate(`/product/${p.id}`)} />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Женское — бренды */}
+      <div style={{ borderBottom: '1px solid #E0E0E0' }}>
+        <GenderHeader
+          label="Женское"
+          sub="Women's Collection"
+          dark={false}
+          onAll={() => navigate('/catalog?gender=female')}
+        />
+        <BrandGrid gender="female" navigate={navigate} />
+      </div>
 
-      {/* Хиты продаж */}
-      {hotProducts && hotProducts.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <SectionTitle
-            title="🔥 Хиты продаж"
-            action={{ label: 'Все', onClick: () => navigate('/catalog?isHot=true') }}
-          />
-          <div className="horizontal-scroll">
-            {hotProducts.map((p) => (
-              <HorizontalProductCard key={p.id} product={p} onClick={() => navigate(`/product/${p.id}`)} />
-            ))}
+      {/* Промо */}
+      <div style={{ padding: '20px 16px 24px' }}>
+        <div style={{ background: '#0A0A0A', padding: '20px', color: '#FFFFFF' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#C9963D', marginBottom: 8 }}>
+            Специальное предложение
           </div>
-        </div>
-      )}
-
-      {/* Баннер первого заказа */}
-      <div style={{ margin: '0 16px 24px' }}>
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: 16,
-            padding: '16px',
-            color: 'white',
-          }}
-        >
-          <div style={{ fontSize: 13, opacity: 0.85, marginBottom: 4 }}>Первый заказ</div>
-          <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Скидка 5% 🎉</div>
-          <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 12 }}>
-            Используй промокод <b>FIRST5</b> при оформлении
+          <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 36, lineHeight: 1, letterSpacing: '0.02em', marginBottom: 8 }}>
+            Первый заказ<br />−5%
+          </div>
+          <div style={{ fontSize: 12, color: '#AAAAAA', marginBottom: 16 }}>
+            Промокод <span style={{ color: '#C9963D', fontWeight: 700 }}>FIRST5</span> при оформлении
           </div>
           <button
             onClick={() => navigate('/catalog')}
             style={{
-              background: 'rgba(255,255,255,0.25)',
-              border: 'none',
-              borderRadius: 8,
-              color: 'white',
-              padding: '8px 16px',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
+              background: '#FFFFFF', border: 'none', color: '#0A0A0A',
+              padding: '10px 20px', fontSize: 10, fontWeight: 700,
+              letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer',
+              fontFamily: "'Inter', sans-serif",
             }}
           >
-            Смотреть каталог →
+            Смотреть каталог
           </button>
         </div>
       </div>
+
     </div>
   );
 }
 
-function SectionTitle({
-  title,
-  action,
+/* ── Заголовок раздела (Мужское / Женское) ───────────────────────────────── */
+function GenderHeader({
+  label, sub, dark, onAll,
 }: {
-  title: string;
-  action?: { label: string; onClick: () => void };
+  label: string; sub: string; dark: boolean; onAll: () => void;
 }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px 10px' }}>
-      <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--tgui--text_color, #000)' }}>{title}</span>
-      {action && (
-        <button
-          onClick={action.onClick}
-          style={{ background: 'none', border: 'none', fontSize: 14, color: 'var(--tgui--button_color, #2481cc)', cursor: 'pointer', fontWeight: 600 }}
-        >
-          {action.label}
-        </button>
-      )}
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      padding: '16px 16px 12px',
+      background: dark ? '#0A0A0A' : '#FFFFFF',
+    }}>
+      <div>
+        <div style={{
+          fontFamily: "'Bebas Neue', sans-serif", fontSize: 26,
+          letterSpacing: '0.04em', lineHeight: 1,
+          color: dark ? '#FFFFFF' : '#0A0A0A',
+        }}>
+          {label}
+        </div>
+        <div style={{
+          fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 500,
+          color: '#888888', letterSpacing: '0.5px', marginTop: 2,
+        }}>
+          {sub}
+        </div>
+      </div>
+      <button
+        onClick={onAll}
+        style={{
+          background: 'none', border: dark ? '1px solid #444' : '1px solid #E0E0E0',
+          color: dark ? '#AAAAAA' : '#888888', padding: '6px 12px',
+          fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase',
+          cursor: 'pointer', fontFamily: "'Inter', sans-serif",
+        }}
+      >
+        Все →
+      </button>
     </div>
   );
 }
 
-function HorizontalProductCard({ product, onClick }: { product: Product; onClick: () => void }) {
-  const totalStock = Object.values(product.stockBySize || {}).reduce((a, b) => a + b, 0);
+/* ── Сетка брендов ───────────────────────────────────────────────────────── */
+function BrandGrid({ gender, navigate }: { gender: string; navigate: (path: string) => void }) {
   return (
-    <div className="horizontal-card" onClick={onClick}>
-      <div style={{ position: 'relative' }}>
-        <img
-          src={product.images[0] || 'https://placehold.co/140x140/f4f4f5/999?text=Фото'}
-          alt={product.name}
-          className="horizontal-card__img"
-          loading="lazy"
-        />
-        {product.isNew && (
-          <span className="badge badge--new" style={{ position: 'absolute', top: 6, left: 6 }}>NEW</span>
-        )}
-        {totalStock <= 3 && totalStock > 0 && (
-          <span className="badge badge--last" style={{ position: 'absolute', top: 6, right: 6 }}>LAST</span>
-        )}
-      </div>
-      <div style={{ padding: '6px 2px 0' }}>
-        <div className="product-card__brand">{product.brand}</div>
-        <div className="product-card__name" style={{ fontSize: 12, WebkitLineClamp: 1 }}>{product.name}</div>
-        <div className="product-card__price" style={{ fontSize: 13 }}>{product.price.toLocaleString('ru')} ₽</div>
-      </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1px', background: '#E0E0E0' }}>
+      {BRANDS.map((b) => (
+        <div key={b.key} style={{ background: '#FFFFFF', display: 'flex', flexDirection: 'column' }}>
+          <button
+            onClick={() => navigate(`/catalog?gender=${gender}&brand=${encodeURIComponent(b.key)}`)}
+            style={{
+              background: 'transparent', border: 'none', padding: '16px 16px 8px',
+              textAlign: 'left', cursor: 'pointer',
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: 17, letterSpacing: '0.05em', color: '#0A0A0A', lineHeight: 1,
+            }}
+          >
+            {b.label}
+            <div style={{
+              fontFamily: "'Inter', sans-serif", fontSize: 9, fontWeight: 600,
+              color: '#C9963D', letterSpacing: '1px', textTransform: 'uppercase', marginTop: 4,
+            }}>
+              Смотреть →
+            </div>
+          </button>
+
+          {b.sub && b.sub.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => navigate(`/catalog?gender=${gender}&brand=${encodeURIComponent(s.key)}`)}
+              style={{
+                background: '#F5F5F5', border: 'none', borderTop: '1px solid #E0E0E0',
+                padding: '8px 16px', textAlign: 'left', cursor: 'pointer',
+                fontFamily: "'Inter', sans-serif", fontSize: 10, fontWeight: 700,
+                color: '#444444', letterSpacing: '1.2px', textTransform: 'uppercase',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}
+            >
+              {s.label}
+              <span style={{ color: '#C9963D', fontSize: 9 }}>→</span>
+            </button>
+          ))}
+
+          {!b.sub && <div style={{ height: 16 }} />}
+        </div>
+      ))}
     </div>
   );
 }

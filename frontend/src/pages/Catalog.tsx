@@ -9,19 +9,17 @@ export default function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [category, setCategory] = useState<Category>((searchParams.get('category') as Category) || 'all');
-  const [gender, setGender] = useState<Gender>('all');
-  const [brand, setBrand] = useState<string>('');
+  const [gender, setGender] = useState<Gender>((searchParams.get('gender') as Gender) || 'all');
+  const [brand, setBrand] = useState<string>(searchParams.get('brand') || '');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (searchParams.get('focus') === 'search') {
-      searchRef.current?.focus();
-    }
-    if (searchParams.get('isNew') === 'true') {
-      // передаём isNew фильтр
-    }
+    if (searchParams.get('focus') === 'search') searchRef.current?.focus();
+    if (searchParams.get('gender')) setGender(searchParams.get('gender') as Gender);
+    if (searchParams.get('brand')) setBrand(searchParams.get('brand') || '');
+    if (searchParams.get('category')) setCategory(searchParams.get('category') as Category);
   }, [searchParams]);
 
   const queryParams: Record<string, string> = {};
