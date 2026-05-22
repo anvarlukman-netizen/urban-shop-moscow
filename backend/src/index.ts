@@ -15,14 +15,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'https://*.vercel.app',
-    'https://web.telegram.org',
-  ],
-  credentials: true,
-}));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 // Health check

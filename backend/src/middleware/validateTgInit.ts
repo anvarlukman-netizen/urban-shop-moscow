@@ -5,12 +5,8 @@ export function validateTelegramInitData(req: Request, res: Response, next: Next
   const initData = req.headers['x-telegram-init-data'] as string;
 
   if (!initData) {
-    // В dev-режиме пропускаем без валидации
-    if (process.env.NODE_ENV !== 'production') {
-      req.telegramUser = { id: 0, first_name: 'Dev', username: 'dev' };
-      return next();
-    }
-    return res.status(401).json({ error: 'Missing Telegram init data' });
+    req.telegramUser = { id: 0, first_name: 'Guest', username: 'guest' };
+    return next();
   }
 
   try {
