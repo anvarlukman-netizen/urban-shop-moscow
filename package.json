@@ -1,0 +1,11 @@
+{
+  "name": "urban-shop-moscow-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd backend && npm ci && npm run build",
+    "start": "cd backend && npm start"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
