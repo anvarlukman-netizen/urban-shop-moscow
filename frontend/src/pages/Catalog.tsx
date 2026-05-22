@@ -30,7 +30,7 @@ export default function Catalog() {
   if (searchParams.get('isNew') === 'true') queryParams.isNew = 'true';
   if (searchParams.get('isHot') === 'true') queryParams.isHot = 'true';
 
-  const { data: products, isLoading } = useQuery({
+  const { data: products, isLoading, isError, error } = useQuery({
     queryKey: ['products', queryParams],
     queryFn: () => api.getProducts({ ...queryParams, limit: '50' }),
   });
@@ -136,7 +136,7 @@ export default function Catalog() {
 
       {/* Счётчик результатов */}
       <div style={{ padding: '0 16px 10px', fontSize: 13, color: 'var(--tgui--hint_color, #999)' }}>
-        {isLoading ? 'Загружаем...' : `${products?.length ?? 0} товаров`}
+        {isLoading ? 'Загружаем...' : isError ? `Ошибка: ${(error as Error)?.message}` : `${products?.length ?? 0} товаров`}
       </div>
 
       {/* Сетка товаров */}
