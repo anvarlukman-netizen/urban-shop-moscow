@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(winget install Python.Python.3.12 --silent --accept-source-agreements --accept-package-agreements 2>&1)",
+      "Bash(curl -s -A \"Mozilla/5.0\" \"https://sneakerhead.ru/shoes/sneakers/204l-u204lmma/\")",
+      "Bash(curl -s -A \"Mozilla/5.0\" \"https://sneakerhead.ru/shoes/sneakers/men/\")"
+    ]
+  }
+}

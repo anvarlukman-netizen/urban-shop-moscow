@@ -6,6 +6,9 @@ export interface Product {
   gender: 'male' | 'female' | 'unisex';
   price: number;
   description: string;
+  article: string;
+  colorway: string;
+  material: string;
   images: string[];
   sizes: (string | number)[];
   stockBySize: Record<string, number>;

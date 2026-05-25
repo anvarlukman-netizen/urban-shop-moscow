@@ -4,10 +4,12 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 import { validateTelegramInitData } from './middleware/validateTgInit';
+import { adminAuth } from './middleware/adminAuth';
 import productsRouter from './routes/products';
 import ordersRouter from './routes/orders';
 import favouritesRouter from './routes/favourites';
 import reviewsRouter from './routes/reviews';
+import adminRouter from './routes/admin';
 import { initBot, getBot } from './bot/notifications';
 import { setupBotCommands } from './bot/commands';
 
@@ -26,6 +28,9 @@ app.use('/api/products', validateTelegramInitData, productsRouter);
 app.use('/api/orders', validateTelegramInitData, ordersRouter);
 app.use('/api/favourites', validateTelegramInitData, favouritesRouter);
 app.use('/api/reviews', validateTelegramInitData, reviewsRouter);
+
+// Admin routes (защита паролем)
+app.use('/api/admin', adminAuth, adminRouter);
 
 // Инициализируем Telegram бота
 const botToken = process.env.BOT_TOKEN;

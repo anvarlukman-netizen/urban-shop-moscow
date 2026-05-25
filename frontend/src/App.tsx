@@ -9,6 +9,7 @@ import Checkout from './pages/Checkout';
 import Favourites from './pages/Favourites';
 import Profile from './pages/Profile';
 import Reviews from './pages/Reviews';
+import Admin from './pages/Admin';
 
 export default function App() {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="/favourites" element={<Favourites />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/reviews" element={<Reviews />} />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
 
       {!hideNav && (

@@ -64,8 +64,8 @@ function AverageBadge({ reviews }: { reviews: Review[] }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 10,
-      background: 'var(--brand-bg-soft, #FDF2F8)',
-      border: '1px solid var(--brand-border, #F3D5E4)',
+      background: 'var(--brand-accent-lt, #F5ECD7)',
+      border: '1px solid var(--brand-border, #E6E2D8)',
       borderRadius: 14, padding: '14px 18px', marginBottom: 20,
     }}>
       <span style={{ fontSize: 36, fontFamily: 'var(--font-display)', color: 'var(--brand-accent)', fontWeight: 700 }}>
@@ -129,7 +129,7 @@ export default function Reviews() {
         fontSize: 28,
         fontWeight: 600,
         margin: '0 0 4px',
-        color: 'var(--brand-primary)',
+        color: 'var(--brand-accent)',
       }}>
         Отзывы
       </h1>
