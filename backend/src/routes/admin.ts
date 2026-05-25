@@ -95,31 +95,41 @@ router.delete('/products/:id', async (req: Request, res: Response) => {
   }
 });
 
-// POST upload image → imgbb
+// POST upload image → GitHub repo → GitHub Pages
 router.post('/upload', async (req: Request, res: Response) => {
   try {
-    const { imageBase64 } = req.body;
-    const apiKey = process.env.IMGBB_API_KEY;
+    const { imageBase64, filename } = req.body as { imageBase64: string; filename?: string };
+    const ghToken = process.env.GITHUB_TOKEN;
+    const ghRepo = process.env.GITHUB_REPO || 'anvarlukman-netizen/urban-shop-moscow';
 
-    if (!apiKey) {
-      return res.status(500).json({ error: 'IMGBB_API_KEY not configured' });
+    if (!ghToken) {
+      return res.status(500).json({ error: 'GITHUB_TOKEN not configured' });
     }
 
-    const formData = new URLSearchParams();
-    formData.append('key', apiKey);
-    formData.append('image', imageBase64);
+    const ext = (filename || 'image.jpg').split('.').pop() || 'jpg';
+    const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const path = `frontend/public/uploads/${name}`;
 
-    const r = await fetch('https://api.imgbb.com/1/upload', {
-      method: 'POST',
-      body: formData,
+    const r = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${path}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${ghToken}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'urban-shop-admin',
+      },
+      body: JSON.stringify({
+        message: `upload: ${name}`,
+        content: imageBase64,
+      }),
     });
 
-    const data = await r.json() as { data?: { url: string }; error?: { message: string } };
-    if (!r.ok || !data.data) {
-      return res.status(500).json({ error: data.error?.message || 'Upload failed' });
+    const data = await r.json() as { content?: { html_url: string }; message?: string };
+    if (!r.ok) {
+      return res.status(500).json({ error: data.message || 'GitHub upload failed' });
     }
 
-    res.json({ url: data.data.url });
+    const url = `https://anvarlukman-netizen.github.io/urban-shop-moscow/uploads/${name}`;
+    res.json({ url });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Upload failed' });

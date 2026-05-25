@@ -32,7 +32,7 @@ async function uploadImage(file: File): Promise<string> {
   });
   const data = await adminRequest<{ url: string }>('/upload', {
     method: 'POST',
-    body: JSON.stringify({ imageBase64: base64 }),
+    body: JSON.stringify({ imageBase64: base64, filename: file.name }),
   });
   return data.url;
 }
