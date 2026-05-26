@@ -1,7 +1,10 @@
 import { Router, Request, Response } from 'express';
+import multer from 'multer';
 import { db } from '../db';
 import { products, parseProduct } from '../db/schema';
 import { eq } from 'drizzle-orm';
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 const router = Router();
 
@@ -96,43 +99,36 @@ router.delete('/products/:id', async (req: Request, res: Response) => {
 });
 
 // POST upload image → GitHub repo → GitHub Pages
-router.post('/upload', async (req: Request, res: Response) => {
+router.post('/upload', upload.single('file'), async (req: Request, res: Response) => {
   try {
-    const { imageBase64, filename } = req.body as { imageBase64: string; filename?: string };
     const ghToken = process.env.GITHUB_TOKEN;
-    const ghRepo = process.env.GITHUB_REPO || 'anvarlukman-netizen/urban-shop-moscow';
+    const ghRepo = 'anvarlukman-netizen/urban-shop-moscow';
 
-    if (!ghToken) {
-      return res.status(500).json({ error: 'GITHUB_TOKEN not configured' });
-    }
+    if (!ghToken) return res.status(500).json({ error: 'GITHUB_TOKEN not configured' });
+    if (!req.file) return res.status(400).json({ error: 'No file provided' });
 
-    const ext = (filename || 'image.jpg').split('.').pop() || 'jpg';
+    const ext = req.file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
     const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const path = `frontend/public/uploads/${name}`;
+    const filePath = `frontend/public/uploads/${name}`;
+    const content = req.file.buffer.toString('base64');
 
-    const r = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${path}`, {
+    const r = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${filePath}`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${ghToken}`,
         'Content-Type': 'application/json',
         'User-Agent': 'urban-shop-admin',
       },
-      body: JSON.stringify({
-        message: `upload: ${name}`,
-        content: imageBase64,
-      }),
+      body: JSON.stringify({ message: `upload: ${name}`, content }),
     });
 
-    const data = await r.json() as { content?: { html_url: string }; message?: string };
-    if (!r.ok) {
-      return res.status(500).json({ error: data.message || 'GitHub upload failed' });
-    }
+    const data = await r.json() as { content?: object; message?: string };
+    if (!r.ok) return res.status(500).json({ error: data.message || 'GitHub upload failed' });
 
-    const url = `https://anvarlukman-netizen.github.io/urban-shop-moscow/uploads/${name}`;
-    res.json({ url });
+    res.json({ url: `https://anvarlukman-netizen.github.io/urban-shop-moscow/uploads/${name}` });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Upload failed' });
+    console.error('Upload error:', err);
+    res.status(500).json({ error: String(err) });
   }
 });
 

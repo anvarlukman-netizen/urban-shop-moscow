@@ -23,37 +23,23 @@ function adminRequest<T>(path: string, options?: RequestInit): Promise<T> {
   });
 }
 
-async function compressAndEncode(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const MAX = 1200;
-      let { width, height } = img;
-      if (width > MAX || height > MAX) {
-        const ratio = Math.min(MAX / width, MAX / height);
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      resolve(dataUrl.split(',')[1]);
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
 async function uploadImage(file: File): Promise<string> {
-  const base64 = await compressAndEncode(file);
-  const data = await adminRequest<{ url: string }>('/upload', {
+  const password = localStorage.getItem('admin_password') || '';
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API}/admin/upload`, {
     method: 'POST',
-    body: JSON.stringify({ imageBase64: base64, filename: file.name }),
+    headers: { 'x-admin-password': password },
+    body: formData,
   });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    throw new Error(err.error || 'Upload failed');
+  }
+
+  const data = await res.json() as { url: string };
   return data.url;
 }
 
