@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../api/client';
@@ -9,6 +9,9 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { tg, user, haptic } = useTelegram();
   const { items, total, clear } = useCartStore();
+
+  // true только когда реально внутри Telegram (initData непустой)
+  const isInTelegram = Boolean(tg?.initData);
 
   const [name, setName] = useState(user ? `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}` : '');
   const [phone, setPhone] = useState('');
@@ -33,15 +36,16 @@ export default function Checkout() {
   });
 
   useEffect(() => {
+    if (!isInTelegram) return;
     tg?.BackButton.show();
     tg?.BackButton.onClick(() => navigate(-1));
     return () => { tg?.BackButton.hide(); tg?.MainButton.hide(); };
-  }, [tg, navigate]);
+  }, [tg, isInTelegram, navigate]);
 
   const validate = () => {
     const e: Record<string, string> = {};
     if (name.trim().length < 2) e.name = 'Введите имя';
-    if (phone.length < 11) e.phone = 'Введите 11 цифр номера';
+    if (phone.length < 11) e.phone = 'Введите 11 цифр';
     if (delivery === 'delivery' && address.trim().length < 5) e.address = 'Введите адрес доставки';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -69,19 +73,24 @@ export default function Checkout() {
     });
   };
 
-  // MainButton
+  // ref всегда держит актуальный handleSubmit — решает stale closure
+  const submitRef = useRef(handleSubmit);
+  submitRef.current = handleSubmit;
+
+  // MainButton (только внутри Telegram)
   useEffect(() => {
-    if (!tg) return;
+    if (!isInTelegram || !tg) return;
+    const handler = () => submitRef.current();
     tg.MainButton.setText(mutation.isPending ? 'Оформляем...' : `Подтвердить заказ — ${total().toLocaleString('ru')} ₽`);
     tg.MainButton.show();
     if (mutation.isPending) {
       tg.MainButton.disable();
     } else {
       tg.MainButton.enable();
-      tg.MainButton.onClick(handleSubmit);
+      tg.MainButton.onClick(handler);
     }
-    return () => tg.MainButton.offClick(handleSubmit);
-  }, [tg, mutation.isPending, total()]);
+    return () => tg.MainButton.offClick(handler);
+  }, [tg, isInTelegram, mutation.isPending, total()]);
 
   const inputStyle = (field: string) => ({
     ...(errors[field] ? { borderColor: '#ff3b30' } : {}),
@@ -116,7 +125,7 @@ export default function Checkout() {
           onChange={(e) => {
             const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
             setPhone(digits);
-            setErrors((prev) => ({ ...prev, phone: '' }));
+            if (digits.length >= 11) setErrors((prev) => ({ ...prev, phone: '' }));
           }}
           placeholder="89991234567"
           type="tel"
@@ -207,8 +216,8 @@ export default function Checkout() {
         🔒 Ваши данные защищены и используются только для оформления заказа
       </div>
 
-      {/* Кнопка для браузера */}
-      {!tg && (
+      {/* Кнопка — показывается когда НЕ внутри Telegram */}
+      {!isInTelegram && (
         <div style={{ padding: '0 16px 24px' }}>
           <button
             onClick={handleSubmit}
