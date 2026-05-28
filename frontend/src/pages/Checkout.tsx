@@ -41,7 +41,7 @@ export default function Checkout() {
   const validate = () => {
     const e: Record<string, string> = {};
     if (name.trim().length < 2) e.name = 'Введите имя';
-    if (!phone.trim()) e.phone = 'Введите номер телефона';
+    if (phone.length < 11) e.phone = 'Введите 11 цифр номера';
     if (delivery === 'delivery' && address.trim().length < 5) e.address = 'Введите адрес доставки';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -113,10 +113,15 @@ export default function Checkout() {
           className="form-input"
           style={inputStyle('phone')}
           value={phone}
-          onChange={(e) => { setPhone(e.target.value); setErrors((prev) => ({ ...prev, phone: '' })); }}
-          placeholder="+7 (999) 000-00-00"
+          onChange={(e) => {
+            const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+            setPhone(digits);
+            setErrors((prev) => ({ ...prev, phone: '' }));
+          }}
+          placeholder="89991234567"
           type="tel"
-          inputMode="tel"
+          inputMode="numeric"
+          maxLength={11}
         />
         {errors.phone && <div style={{ color: '#ff3b30', fontSize: 12, marginTop: 4 }}>{errors.phone}</div>}
       </div>
