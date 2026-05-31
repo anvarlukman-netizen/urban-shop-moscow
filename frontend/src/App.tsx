@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useTelegram } from './hooks/useTelegram';
 import { useCartStore } from './store/cart';
@@ -15,6 +16,16 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const { colorScheme } = useTelegram();
+
+  // При каждом запуске приложения возвращаться на главную
+  useEffect(() => {
+    if (!sessionStorage.getItem('_launched')) {
+      sessionStorage.setItem('_launched', '1');
+      if (location.pathname !== '/admin') {
+        navigate('/', { replace: true });
+      }
+    }
+  }, []);
   const cartCount = useCartStore((s) => s.count());
 
   const tabs = [
