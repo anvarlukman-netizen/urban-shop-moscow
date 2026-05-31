@@ -22,6 +22,12 @@ export default function Catalog() {
     if (searchParams.get('category')) setCategory(searchParams.get('category') as Category);
   }, [searchParams]);
 
+  // Debounce: обновляем поиск через 300мс после остановки ввода
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   const queryParams: Record<string, string> = {};
   if (category !== 'all') queryParams.category = category;
   if (gender !== 'all') queryParams.gender = gender;
@@ -40,11 +46,6 @@ export default function Catalog() {
     queryFn: () => api.getBrands(),
   });
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSearch(searchInput);
-  };
-
   const categories: { key: Category; label: string }[] = [
     { key: 'all', label: 'Все' },
     { key: 'sneakers', label: '👟 Кроссовки' },
@@ -61,28 +62,32 @@ export default function Catalog() {
   return (
     <div className="page-scroll">
       {/* Поиск */}
-      <form onSubmit={handleSearch} style={{ padding: '12px 16px 8px', display: 'flex', gap: 8 }}>
+      <div style={{ padding: '12px 16px 8px', position: 'relative' }}>
+        <svg
+          style={{ position: 'absolute', left: 28, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#aaa' }}
+          width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
+        >
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
         <input
           ref={searchRef}
           className="form-input"
-          style={{ flex: 1, padding: '10px 14px', fontSize: 15 }}
+          style={{ width: '100%', padding: '11px 36px 11px 38px', fontSize: 15, boxSizing: 'border-box' }}
           placeholder="Поиск по названию или бренду..."
           value={searchInput}
-          onChange={(e) => {
-            setSearchInput(e.target.value);
-            if (!e.target.value) setSearch('');
-          }}
+          onChange={(e) => setSearchInput(e.target.value)}
+          autoComplete="off"
         />
         {searchInput && (
           <button
             type="button"
             onClick={() => { setSearchInput(''); setSearch(''); }}
-            style={{ background: 'none', border: 'none', fontSize: 20, color: 'var(--tgui--hint_color)', cursor: 'pointer', padding: '0 4px' }}
+            style={{ position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', fontSize: 18, color: '#aaa', cursor: 'pointer', padding: 4, lineHeight: 1 }}
           >
             ✕
           </button>
         )}
-      </form>
+      </div>
 
       {/* Фильтр категорий */}
       <div className="filter-scroll" style={{ paddingTop: 4 }}>
