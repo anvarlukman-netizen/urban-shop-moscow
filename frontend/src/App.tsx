@@ -17,13 +17,10 @@ export default function App() {
   const location = useLocation();
   const { colorScheme } = useTelegram();
 
-  // При каждом запуске приложения возвращаться на главную
+  // При каждом запуске возвращаться на главную (кроме /admin)
   useEffect(() => {
-    if (!sessionStorage.getItem('_launched')) {
-      sessionStorage.setItem('_launched', '1');
-      if (location.pathname !== '/admin') {
-        navigate('/', { replace: true });
-      }
+    if (location.pathname !== '/admin') {
+      navigate('/', { replace: true });
     }
   }, []);
   const cartCount = useCartStore((s) => s.count());
