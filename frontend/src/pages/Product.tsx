@@ -107,18 +107,33 @@ export default function Product() {
 
         {/* ── Галерея ── */}
         <div
-          style={{ position: 'relative', background: '#F7F7F7', userSelect: 'none' }}
+          style={{ position: 'relative', background: '#F7F7F7', userSelect: 'none', overflow: 'hidden' }}
           onTouchStart={handleTouchStart}
           onTouchEnd={(e) => handleTouchEnd(e, images.length)}
         >
+          {/* Главное фото */}
           <img
             src={images[photoIndex]}
             alt={product.name}
             style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }}
           />
 
+          {/* Зоны нажатия влево / вправо */}
+          {images.length > 1 && (
+            <>
+              <div
+                onClick={() => setPhotoIndex(i => (i - 1 + images.length) % images.length)}
+                style={{ position: 'absolute', left: 0, top: 0, width: '30%', height: '100%', cursor: 'pointer' }}
+              />
+              <div
+                onClick={() => setPhotoIndex(i => (i + 1) % images.length)}
+                style={{ position: 'absolute', right: 0, top: 0, width: '30%', height: '100%', cursor: 'pointer' }}
+              />
+            </>
+          )}
+
           {/* Бейджи */}
-          <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 4 }}>
             {product.isNew && <span className="badge badge--new">NEW</span>}
             {product.isHot && <span className="badge badge--hot">HOT</span>}
             {isLastUnits && <span className="badge badge--last">LAST</span>}
@@ -129,51 +144,54 @@ export default function Product() {
             onClick={() => { setIsFav(f => !f); haptic?.selectionChanged(); }}
             style={{
               position: 'absolute', top: 10, right: 10,
-              width: 38, height: 38, background: '#FFFFFF',
-              borderRadius: '50%', border: '1px solid #E0E0E0',
+              width: 38, height: 38, background: 'rgba(255,255,255,0.92)',
+              borderRadius: '50%', border: '1px solid rgba(0,0,0,0.08)',
               cursor: 'pointer', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', fontSize: 18, boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+              justifyContent: 'center', fontSize: 20, boxShadow: '0 1px 6px rgba(0,0,0,0.10)',
+              color: isFav ? '#E53935' : '#888',
             }}
           >
             {isFav ? '♥' : '♡'}
           </button>
 
-          {/* Точки-индикаторы */}
+          {/* Счётчик фото + точки */}
           {images.length > 1 && (
-            <div style={{ position: 'absolute', bottom: 10, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 5 }}>
-              {images.map((_, i) => (
-                <div
-                  key={i}
-                  onClick={() => setPhotoIndex(i)}
-                  style={{
-                    width: i === photoIndex ? 18 : 6, height: 6,
-                    borderRadius: 3, background: i === photoIndex ? '#0A0A0A' : 'rgba(0,0,0,0.25)',
-                    transition: 'width 0.2s ease', cursor: 'pointer',
-                  }}
-                />
-              ))}
+            <div style={{
+              position: 'absolute', bottom: 12, left: 0, right: 0,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+            }}>
+              {/* Точки */}
+              <div style={{ display: 'flex', gap: 5 }}>
+                {images.map((_, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setPhotoIndex(i)}
+                    style={{
+                      width: i === photoIndex ? 20 : 6,
+                      height: 6,
+                      borderRadius: 3,
+                      background: i === photoIndex ? '#0A0A0A' : 'rgba(255,255,255,0.7)',
+                      border: i === photoIndex ? 'none' : '1px solid rgba(0,0,0,0.2)',
+                      transition: 'width 0.25s ease',
+                      cursor: 'pointer',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Счётчик N/Total в углу */}
+          {images.length > 1 && (
+            <div style={{
+              position: 'absolute', bottom: 12, right: 12,
+              background: 'rgba(0,0,0,0.45)', borderRadius: 20,
+              padding: '3px 9px', fontSize: 11, color: '#fff', fontFamily: IB, fontWeight: 600,
+            }}>
+              {photoIndex + 1} / {images.length}
             </div>
           )}
         </div>
-
-        {/* Миниатюры */}
-        {images.length > 1 && (
-          <div style={{ display: 'flex', gap: '1px', background: '#E0E0E0', borderBottom: '1px solid #E0E0E0' }}>
-            {images.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setPhotoIndex(i)}
-                style={{
-                  flex: 1, padding: 0, border: 'none', cursor: 'pointer',
-                  outline: i === photoIndex ? '2px solid #0A0A0A' : 'none',
-                  outlineOffset: -2, background: 'none',
-                }}
-              >
-                <img src={img} alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* ── Бренд + название + цена ── */}
         <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid #EBEBEB' }}>
