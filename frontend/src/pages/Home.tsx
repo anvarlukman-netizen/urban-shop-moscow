@@ -20,21 +20,30 @@ export default function Home() {
   return (
     <div className="page-scroll">
 
-      {/* Hero */}
+      {/* ── Hero ── */}
       <div style={{ padding: '24px 16px 20px', borderBottom: '1px solid #E0E0E0' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#888888', marginBottom: 6 }}>
+        <div
+          className="home-hero-sub"
+          style={{ fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#888888', marginBottom: 6 }}
+        >
           {user ? `Привет, ${user.first_name}` : 'Добро пожаловать'}
         </div>
-        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 42, lineHeight: 0.95, letterSpacing: '0.02em', color: '#0A0A0A', marginBottom: 8 }}>
+        <div
+          className="home-hero-title"
+          style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 42, lineHeight: 0.95, letterSpacing: '0.02em', color: '#0A0A0A', marginBottom: 8 }}
+        >
           Urban Shop<br />Moscow
         </div>
-        <div style={{ fontSize: 12, color: '#888888', letterSpacing: '0.5px' }}>
+        <div
+          className="home-hero-sub"
+          style={{ fontSize: 12, color: '#888888', letterSpacing: '0.5px', animationDelay: '0.25s' }}
+        >
           Место где выбирают стиль
         </div>
       </div>
 
-      {/* Поиск */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid #E0E0E0' }}>
+      {/* ── Поиск ── */}
+      <div className="home-search" style={{ padding: '12px 16px', borderBottom: '1px solid #E0E0E0' }}>
         <button
           onClick={() => navigate('/catalog?focus=search')}
           style={{
@@ -51,31 +60,21 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Мужское — бренды */}
-      <div style={{ borderBottom: '1px solid #E0E0E0' }}>
-        <GenderHeader
-          label="Мужское"
-          sub="Men's Collection"
-          dark
-          onAll={() => navigate('/catalog?gender=male')}
-        />
-        <BrandGrid gender="male" navigate={navigate} />
+      {/* ── Мужское ── */}
+      <div className="home-section" style={{ borderBottom: '1px solid #E0E0E0', animationDelay: '0.15s' }}>
+        <GenderHeader label="Мужское" sub="Men's Collection" dark onAll={() => navigate('/catalog?gender=male')} />
+        <BrandGrid gender="male" navigate={navigate} baseDelay={0.2} />
       </div>
 
-      {/* Женское — бренды */}
-      <div style={{ borderBottom: '1px solid #E0E0E0' }}>
-        <GenderHeader
-          label="Женское"
-          sub="Women's Collection"
-          dark={false}
-          onAll={() => navigate('/catalog?gender=female')}
-        />
-        <BrandGrid gender="female" navigate={navigate} />
+      {/* ── Женское ── */}
+      <div className="home-section" style={{ borderBottom: '1px solid #E0E0E0', animationDelay: '0.25s' }}>
+        <GenderHeader label="Женское" sub="Women's Collection" dark={false} onAll={() => navigate('/catalog?gender=female')} />
+        <BrandGrid gender="female" navigate={navigate} baseDelay={0.3} />
       </div>
 
-      {/* Промо */}
+      {/* ── Промо ── */}
       <div style={{ padding: '20px 16px 24px' }}>
-        <div style={{ background: '#0A0A0A', padding: '20px', color: '#FFFFFF' }}>
+        <div className="home-promo" style={{ background: '#0A0A0A', padding: '20px', color: '#FFFFFF' }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#C9963D', marginBottom: 8 }}>
             Специальное предложение
           </div>
@@ -103,12 +102,8 @@ export default function Home() {
   );
 }
 
-/* ── Заголовок раздела (Мужское / Женское) ───────────────────────────────── */
-function GenderHeader({
-  label, sub, dark, onAll,
-}: {
-  label: string; sub: string; dark: boolean; onAll: () => void;
-}) {
+/* ── Заголовок раздела ── */
+function GenderHeader({ label, sub, dark, onAll }: { label: string; sub: string; dark: boolean; onAll: () => void }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -133,7 +128,8 @@ function GenderHeader({
       <button
         onClick={onAll}
         style={{
-          background: 'none', border: dark ? '1px solid #444' : '1px solid #E0E0E0',
+          background: 'none',
+          border: dark ? '1px solid #444' : '1px solid #E0E0E0',
           color: dark ? '#AAAAAA' : '#888888', padding: '6px 12px',
           fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase',
           cursor: 'pointer', fontFamily: "'Inter', sans-serif",
@@ -145,12 +141,24 @@ function GenderHeader({
   );
 }
 
-/* ── Сетка брендов ───────────────────────────────────────────────────────── */
-function BrandGrid({ gender, navigate }: { gender: string; navigate: (path: string) => void }) {
+/* ── Сетка брендов со stagger ── */
+function BrandGrid({ gender, navigate, baseDelay }: {
+  gender: string;
+  navigate: (path: string) => void;
+  baseDelay: number;
+}) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1px', background: '#E0E0E0' }}>
-      {BRANDS.map((b) => (
-        <div key={b.key} style={{ background: '#FFFFFF', display: 'flex', flexDirection: 'column' }}>
+      {BRANDS.map((b, idx) => (
+        <div
+          key={b.key}
+          className="home-brand-tile"
+          style={{
+            background: '#FFFFFF',
+            display: 'flex', flexDirection: 'column',
+            animationDelay: `${baseDelay + idx * 0.05}s`,
+          }}
+        >
           <button
             onClick={() => navigate(`/catalog?gender=${gender}&brand=${encodeURIComponent(b.key)}`)}
             style={{
