@@ -58,21 +58,27 @@ export default function Product() {
     return { rating: Math.min(rating, 5), count };
   });
 
-  // Swipe
+  // Slider drag state
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const galleryRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  };
-  const handleTouchEnd = (e: React.TouchEvent, total: number) => {
-    const dx = touchStartX.current - e.changedTouches[0].clientX;
-    const dy = touchStartY.current - e.changedTouches[0].clientY;
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
-      if (dx > 0) setPhotoIndex(i => (i + 1) % total);
-      else setPhotoIndex(i => (i - 1 + total) % total);
-    }
-  };
+  const isHorizSwipe = useRef(false);
+
+  // Non-passive touchmove to prevent scroll during horizontal swipe
+  useEffect(() => {
+    const el = galleryRef.current;
+    if (!el) return;
+    const onMove = (e: TouchEvent) => {
+      if (!isHorizSwipe.current) return;
+      e.preventDefault();
+      const dx = e.touches[0].clientX - touchStartX.current;
+      setDragOffset(dx);
+    };
+    el.addEventListener('touchmove', onMove, { passive: false });
+    return () => el.removeEventListener('touchmove', onMove);
+  }, []);
 
   const addItem = useCartStore((s) => s.addItem);
 
@@ -145,42 +151,69 @@ export default function Product() {
 
         {/* ══ ГАЛЕРЕЯ ══════════════════════════════════════════════════════ */}
         <div
+          ref={galleryRef}
           style={{ position: 'relative', background: '#F7F7F7', overflow: 'hidden', userSelect: 'none' }}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={(e) => handleTouchEnd(e, images.length)}
+          onTouchStart={(e) => {
+            touchStartX.current = e.touches[0].clientX;
+            touchStartY.current = e.touches[0].clientY;
+            isHorizSwipe.current = false;
+            setIsDragging(false);
+            setDragOffset(0);
+          }}
+          onTouchEnd={(e) => {
+            const dx = touchStartX.current - e.changedTouches[0].clientX;
+            setIsDragging(false);
+            setDragOffset(0);
+            if (isHorizSwipe.current && Math.abs(dx) > 40) {
+              if (dx > 0) setPhotoIndex(i => Math.min(i + 1, images.length - 1));
+              else setPhotoIndex(i => Math.max(i - 1, 0));
+            }
+            isHorizSwipe.current = false;
+          }}
+          onTouchMove={(e) => {
+            const dx = e.touches[0].clientX - touchStartX.current;
+            const dy_ = e.touches[0].clientY - touchStartY.current;
+            if (!isHorizSwipe.current && (Math.abs(dx) > 6 || Math.abs(dy_) > 6)) {
+              isHorizSwipe.current = Math.abs(dx) > Math.abs(dy_);
+              if (isHorizSwipe.current) setIsDragging(true);
+            }
+          }}
         >
-          {/* Фото — соотношение 3:4 как у goldapple */}
-          <img
-            src={images[photoIndex]}
-            alt={product.name}
-            style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', display: 'block' }}
-          />
+          {/* ── Слайдер-трек ── */}
+          <div style={{
+            display: 'flex',
+            transform: `translateX(calc(${-photoIndex * 100}% + ${dragOffset}px))`,
+            transition: isDragging ? 'none' : 'transform 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            willChange: 'transform',
+          }}>
+            {images.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                alt={i === 0 ? product.name : ''}
+                draggable={false}
+                style={{
+                  width: '100%', flexShrink: 0,
+                  aspectRatio: '1', objectFit: 'cover', display: 'block',
+                }}
+              />
+            ))}
+          </div>
 
-          {/* Зоны нажатия */}
-          {images.length > 1 && (
-            <>
-              <div onClick={() => setPhotoIndex(i => (i - 1 + images.length) % images.length)}
-                style={{ position: 'absolute', left: 0, top: 0, width: '35%', height: '100%', cursor: 'pointer' }} />
-              <div onClick={() => setPhotoIndex(i => (i + 1) % images.length)}
-                style={{ position: 'absolute', right: 0, top: 0, width: '35%', height: '100%', cursor: 'pointer' }} />
-            </>
-          )}
-
-          {/* Бейджи — левый верх */}
-          <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 5 }}>
+          {/* Бейджи */}
+          <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 5, pointerEvents: 'none' }}>
             {product.isNew && <span className="badge badge--new">NEW</span>}
             {product.isHot && <span className="badge badge--hot">HOT</span>}
             {isLastUnits && <span className="badge badge--last">LAST</span>}
           </div>
 
-          {/* Кнопка избранное — правый верх */}
+          {/* Избранное */}
           <button
             onClick={() => { setIsFav(f => !f); haptic?.selectionChanged(); }}
             style={{
               position: 'absolute', top: 12, right: 12,
               width: 40, height: 40, borderRadius: '50%',
-              background: 'rgba(255,255,255,0.92)',
-              border: 'none', cursor: 'pointer',
+              background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
               color: isFav ? '#E53935' : '#999', transition: 'color 0.15s',
@@ -189,25 +222,19 @@ export default function Product() {
             {isFav ? '♥' : '♡'}
           </button>
 
-          {/* Точки-индикатор — по центру снизу */}
+          {/* Точки */}
           {images.length > 1 && (
             <div style={{
-              position: 'absolute', bottom: 14, left: 0, right: 0,
-              display: 'flex', justifyContent: 'center', gap: 5,
+              position: 'absolute', bottom: 12, left: 0, right: 0,
+              display: 'flex', justifyContent: 'center', gap: 5, pointerEvents: 'none',
             }}>
               {images.map((_, i) => (
-                <div
-                  key={i}
-                  onClick={() => setPhotoIndex(i)}
-                  style={{
-                    width: i === photoIndex ? 22 : 6,
-                    height: 6, borderRadius: 3,
-                    background: i === photoIndex ? '#fff' : 'rgba(255,255,255,0.45)',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                    transition: 'width 0.22s ease',
-                    cursor: 'pointer',
-                  }}
-                />
+                <div key={i} style={{
+                  width: i === photoIndex ? 20 : 6, height: 6, borderRadius: 3,
+                  background: i === photoIndex ? '#fff' : 'rgba(255,255,255,0.5)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                  transition: 'width 0.25s ease, background 0.25s ease',
+                }} />
               ))}
             </div>
           )}
