@@ -49,8 +49,6 @@ export default function Catalog() {
   const categories: { key: Category; label: string }[] = [
     { key: 'all', label: 'Все' },
     { key: 'sneakers', label: '👟 Кроссовки' },
-    { key: 'clothing', label: '👕 Одежда' },
-    { key: 'bags', label: '👜 Сумки' },
   ];
 
   const genders: { key: Gender; label: string }[] = [
