@@ -5,14 +5,14 @@ const IB = "'Inter', sans-serif";
 const BB = "'Bebas Neue', sans-serif";
 
 const BRANDS = [
-  { key: 'Nike',         label: 'NIKE',         color: '#111111' },
-  { key: 'Jordan',       label: 'JORDAN',       color: '#1A1A2E' },
-  { key: 'New Balance',  label: 'NEW BALANCE',  color: '#CC0000' },
-  { key: 'Adidas',       label: 'ADIDAS',       color: '#0A0A0A' },
-  { key: 'On Cloud',     label: 'ON RUNNING',   color: '#2C2C2C' },
-  { key: 'Golden Goose', label: 'GOLDEN GOOSE', color: '#8B6914' },
-  { key: 'Premiata',     label: 'PREMIATA',     color: '#1B3A4B' },
-  { key: 'Lacoste',      label: 'LACOSTE',      color: '#1B6B3A' },
+  { key: 'Nike',         label: 'NIKE' },
+  { key: 'Jordan',       label: 'JORDAN' },
+  { key: 'New Balance',  label: 'NEW BALANCE' },
+  { key: 'Adidas',       label: 'ADIDAS' },
+  { key: 'On Cloud',     label: 'ON RUNNING' },
+  { key: 'Golden Goose', label: 'GOLDEN GOOSE' },
+  { key: 'Premiata',     label: 'PREMIATA' },
+  { key: 'Lacoste',      label: 'LACOSTE' },
 ];
 
 const CATEGORIES = [
@@ -111,19 +111,19 @@ export default function Home() {
               className="home-brand-tile"
               onClick={() => navigate(`/catalog?brand=${encodeURIComponent(b.key)}`)}
               style={{
-                background: b.color,
+                background: '#FFFFFF',
                 border: 'none', cursor: 'pointer',
-                padding: '22px 16px 18px',
+                padding: '20px 16px 16px',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'flex-start', gap: 6,
                 animationDelay: `${0.25 + i * 0.05}s`,
                 minHeight: 80,
               }}
             >
-              <span style={{ fontFamily: BB, fontSize: 20, letterSpacing: '0.06em', color: '#FFFFFF', lineHeight: 1 }}>
+              <span style={{ fontFamily: BB, fontSize: 20, letterSpacing: '0.05em', color: '#0A0A0A', lineHeight: 1 }}>
                 {b.label}
               </span>
-              <span style={{ fontFamily: IB, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+              <span style={{ fontFamily: IB, fontSize: 9, fontWeight: 700, color: '#C9963D', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
                 Смотреть →
               </span>
             </button>
