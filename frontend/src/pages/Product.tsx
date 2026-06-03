@@ -187,16 +187,14 @@ export default function Product() {
             willChange: 'transform',
           }}>
             {images.map((img, i) => (
-              <img
-                key={i}
-                src={img}
-                alt={i === 0 ? product.name : ''}
-                draggable={false}
-                style={{
-                  width: '100%', flexShrink: 0,
-                  aspectRatio: '1', objectFit: 'cover', display: 'block',
-                }}
-              />
+              <div key={i} style={{ width: '100%', flexShrink: 0, aspectRatio: '1', background: '#F7F7F7', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+                <img
+                  src={img}
+                  alt={i === 0 ? product.name : ''}
+                  draggable={false}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                />
+              </div>
             ))}
           </div>
 
@@ -231,14 +229,38 @@ export default function Product() {
               {images.map((_, i) => (
                 <div key={i} style={{
                   width: i === photoIndex ? 20 : 6, height: 6, borderRadius: 3,
-                  background: i === photoIndex ? '#fff' : 'rgba(255,255,255,0.5)',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                  transition: 'width 0.25s ease, background 0.25s ease',
+                  background: i === photoIndex ? '#0A0A0A' : 'rgba(0,0,0,0.18)',
+                  transition: 'width 0.25s ease',
                 }} />
               ))}
             </div>
           )}
         </div>
+
+        {/* ── Миниатюры (brandshop-стиль) ── */}
+        {images.length > 1 && (
+          <div style={{
+            display: 'flex', gap: 6, padding: '10px 16px',
+            overflowX: 'auto', scrollbarWidth: 'none',
+            background: '#FFF', borderBottom: '1px solid #F0F0F0',
+          }}>
+            {images.map((img, i) => (
+              <button
+                key={i}
+                onClick={() => setPhotoIndex(i)}
+                style={{
+                  flexShrink: 0, width: 56, height: 56,
+                  background: '#F7F7F7', border: 'none', cursor: 'pointer', padding: 4,
+                  outline: i === photoIndex ? '2px solid #0A0A0A' : '1.5px solid #E8E8E8',
+                  outlineOffset: i === photoIndex ? -2 : -1,
+                  transition: 'outline 0.15s',
+                }}
+              >
+                <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* ══ ШАПКА ТОВАРА ════════════════════════════════════════════════ */}
         <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid #F0F0F0' }}>
