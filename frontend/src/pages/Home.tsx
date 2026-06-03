@@ -5,6 +5,7 @@ interface Brand { key: string; label: string; sub?: { key: string; label: string
 
 const BRANDS: Brand[] = [
   { key: 'Nike',         label: 'NIKE' },
+  { key: 'Jordan',       label: 'JORDAN' },
   { key: 'New Balance',  label: 'NEW BALANCE' },
   { key: 'Adidas',       label: 'ADIDAS' },
   { key: 'On Cloud',     label: 'ON CLOUD' },
