@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/client';
 import type { Category, Gender, Product } from '../types';
 
+const IB = "'Inter', sans-serif";
+
 export default function Catalog() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,7 +24,6 @@ export default function Catalog() {
     if (searchParams.get('category')) setCategory(searchParams.get('category') as Category);
   }, [searchParams]);
 
-  // Debounce: обновляем поиск через 300мс после остановки ввода
   useEffect(() => {
     const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
     return () => clearTimeout(timer);
@@ -46,128 +47,158 @@ export default function Catalog() {
     queryFn: () => api.getBrands(),
   });
 
-  const categories: { key: Category; label: string }[] = [
-    { key: 'all', label: 'Все' },
-    { key: 'sneakers', label: '👟 Кроссовки' },
-  ];
-
   const genders: { key: Gender; label: string }[] = [
     { key: 'all', label: 'Все' },
     { key: 'male', label: 'Мужское' },
     { key: 'female', label: 'Женское' },
   ];
 
+  const hasFilters = gender !== 'all' || brand !== '';
+
+  /* Заголовок раздела */
+  const sectionTitle = () => {
+    const g = gender === 'male' ? 'Мужские' : gender === 'female' ? 'Женские' : '';
+    const b = brand || '';
+    if (g && b) return `${g} · ${b}`;
+    if (g) return `${g} кроссовки`;
+    if (b) return b;
+    if (searchParams.get('isNew') === 'true') return 'Новинки';
+    if (searchParams.get('isHot') === 'true') return 'Хиты продаж';
+    return 'Все кроссовки';
+  };
+
   return (
     <div className="page-scroll">
-      {/* Поиск */}
-      <div style={{ padding: '12px 16px 8px', position: 'relative' }}>
-        <svg
-          style={{ position: 'absolute', left: 28, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#aaa' }}
-          width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
-        >
+
+      {/* ── Поиск ── */}
+      <div style={{ padding: '12px 16px', position: 'relative', borderBottom: '1px solid #F0F0F0' }}>
+        <svg style={{ position: 'absolute', left: 28, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#BBB' }}
+          width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
           <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <input
           ref={searchRef}
-          className="form-input"
-          style={{ width: '100%', padding: '11px 36px 11px 38px', fontSize: 15, boxSizing: 'border-box' }}
+          style={{
+            width: '100%', padding: '10px 36px 10px 38px',
+            fontSize: 14, fontFamily: IB, color: '#0A0A0A',
+            border: '1.5px solid #E8E8E8', background: '#FAFAFA',
+            borderRadius: 100, outline: 'none', boxSizing: 'border-box',
+          }}
           placeholder="Поиск по названию или бренду..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           autoComplete="off"
         />
         {searchInput && (
-          <button
-            type="button"
-            onClick={() => { setSearchInput(''); setSearch(''); }}
-            style={{ position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', fontSize: 18, color: '#aaa', cursor: 'pointer', padding: 4, lineHeight: 1 }}
-          >
+          <button type="button" onClick={() => { setSearchInput(''); setSearch(''); }}
+            style={{ position: 'absolute', right: 24, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', fontSize: 16, color: '#BBB', cursor: 'pointer', padding: 4 }}>
             ✕
           </button>
         )}
       </div>
 
-      {/* Фильтр категорий */}
-      <div className="filter-scroll" style={{ paddingTop: 4 }}>
-        {categories.map((c) => (
-          <button
-            key={c.key}
-            className={`filter-chip ${category === c.key ? 'active' : ''}`}
-            onClick={() => {
-              setCategory(c.key);
-              setSearchParams({});
-            }}
-          >
-            {c.label}
-          </button>
-        ))}
-      </div>
+      {/* ── Фильтры ── */}
+      <div style={{ padding: '10px 0 2px', borderBottom: '1px solid #F0F0F0' }}>
 
-      {/* Фильтр пол */}
-      <div className="filter-scroll" style={{ paddingTop: 0, paddingBottom: 8 }}>
-        {genders.map((g) => (
-          <button
-            key={g.key}
-            className={`filter-chip ${gender === g.key ? 'active' : ''}`}
-            onClick={() => setGender(g.key)}
-          >
-            {g.label}
-          </button>
-        ))}
-      </div>
+        {/* Пол */}
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '0 16px 8px', scrollbarWidth: 'none' }}>
+          {genders.map((g) => (
+            <button key={g.key} onClick={() => setGender(g.key)} style={{
+              flexShrink: 0, padding: '6px 16px',
+              borderRadius: 100, border: '1.5px solid',
+              borderColor: gender === g.key ? '#0A0A0A' : '#E0E0E0',
+              background: gender === g.key ? '#0A0A0A' : '#FFF',
+              color: gender === g.key ? '#FFF' : '#555',
+              fontSize: 13, fontFamily: IB, fontWeight: gender === g.key ? 600 : 400,
+              cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
+            }}>
+              {g.label}
+            </button>
+          ))}
 
-      {/* Фильтр брендов */}
-      {brands && brands.length > 0 && (
-        <div className="filter-scroll" style={{ paddingTop: 0, paddingBottom: 12 }}>
-          <button
-            className={`filter-chip ${brand === '' ? 'active' : ''}`}
-            onClick={() => setBrand('')}
-          >
+          {/* Разделитель */}
+          <div style={{ width: 1, background: '#E8E8E8', margin: '4px 2px', flexShrink: 0 }} />
+
+          {/* Бренды inline с полом */}
+          <button onClick={() => setBrand('')} style={{
+            flexShrink: 0, padding: '6px 16px',
+            borderRadius: 100, border: '1.5px solid',
+            borderColor: brand === '' ? '#0A0A0A' : '#E0E0E0',
+            background: brand === '' ? '#0A0A0A' : '#FFF',
+            color: brand === '' ? '#FFF' : '#555',
+            fontSize: 13, fontFamily: IB, fontWeight: brand === '' ? 600 : 400,
+            cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
+          }}>
             Все бренды
           </button>
-          {brands.map((b) => (
-            <button
-              key={b}
-              className={`filter-chip ${brand === b ? 'active' : ''}`}
-              onClick={() => setBrand(b === brand ? '' : b)}
-            >
+
+          {(brands ?? []).map((b) => (
+            <button key={b} onClick={() => setBrand(b === brand ? '' : b)} style={{
+              flexShrink: 0, padding: '6px 16px',
+              borderRadius: 100, border: '1.5px solid',
+              borderColor: brand === b ? '#0A0A0A' : '#E0E0E0',
+              background: brand === b ? '#0A0A0A' : '#FFF',
+              color: brand === b ? '#FFF' : '#555',
+              fontSize: 13, fontFamily: IB, fontWeight: brand === b ? 600 : 400,
+              cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
+            }}>
               {b}
             </button>
           ))}
         </div>
-      )}
 
-      {/* Счётчик результатов */}
-      <div style={{ padding: '0 16px 10px', fontSize: 13, color: 'var(--tgui--hint_color, #999)' }}>
-        {isLoading ? 'Загружаем...' : isError ? `Ошибка: ${(error as Error)?.message}` : `${products?.length ?? 0} товаров`}
+        {/* Сброс фильтров */}
+        {hasFilters && (
+          <button onClick={() => { setGender('all'); setBrand(''); setSearchParams({}); }}
+            style={{ margin: '0 16px 8px', background: 'none', border: 'none', fontSize: 12, color: '#888', cursor: 'pointer', fontFamily: IB, textDecoration: 'underline', padding: 0 }}>
+            Сбросить фильтры
+          </button>
+        )}
       </div>
 
-      {/* Сетка товаров */}
+      {/* ── Заголовок раздела (как brandshop) ── */}
+      <div style={{ padding: '14px 16px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <div style={{ fontFamily: IB, fontSize: 17, fontWeight: 600, color: '#0A0A0A', letterSpacing: '-0.2px' }}>
+          {sectionTitle()}
+        </div>
+        <div style={{ fontFamily: IB, fontSize: 12, color: '#AAA' }}>
+          {isLoading ? '...' : isError ? '!' : `${products?.length ?? 0}`}
+        </div>
+      </div>
+
+      {/* ── Сетка товаров ── */}
       {isLoading ? (
-        <div className="catalog-grid">
+        <div className="catalog-grid" style={{ margin: '8px 0' }}>
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i}>
-              <div className="skeleton" style={{ width: '100%', aspectRatio: '1', borderRadius: 12 }} />
-              <div className="skeleton" style={{ height: 12, marginTop: 8, width: '60%', borderRadius: 6 }} />
-              <div className="skeleton" style={{ height: 16, marginTop: 6, width: '80%', borderRadius: 6 }} />
+            <div key={i} style={{ background: '#FFF' }}>
+              <div className="skeleton" style={{ width: '100%', aspectRatio: '1' }} />
+              <div style={{ padding: '8px 10px 14px' }}>
+                <div className="skeleton" style={{ height: 10, width: '40%', marginBottom: 6 }} />
+                <div className="skeleton" style={{ height: 13, width: '75%', marginBottom: 6 }} />
+                <div className="skeleton" style={{ height: 16, width: '50%' }} />
+              </div>
             </div>
           ))}
         </div>
+      ) : isError ? (
+        <div style={{ textAlign: 'center', padding: '40px 16px', color: '#999' }}>
+          <div style={{ fontSize: 13, fontFamily: IB }}>Ошибка загрузки · {(error as Error)?.message}</div>
+        </div>
       ) : products?.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--tgui--hint_color, #999)' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>Ничего не найдено</div>
-          <div style={{ fontSize: 14 }}>Попробуй другие фильтры</div>
+        <div style={{ textAlign: 'center', padding: '48px 16px', color: '#999' }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#0A0A0A', marginBottom: 6, fontFamily: IB }}>Ничего не найдено</div>
+          <div style={{ fontSize: 13, fontFamily: IB }}>Попробуйте другой запрос или бренд</div>
         </div>
       ) : (
-        <div className="catalog-grid">
+        <div className="catalog-grid" style={{ margin: '8px 0' }}>
           {products?.map((p) => (
             <ProductCard key={p.id} product={p} onClick={() => navigate(`/product/${p.id}`)} />
           ))}
         </div>
       )}
 
-      <div style={{ height: 16 }} />
+      <div style={{ height: 20 }} />
     </div>
   );
 }
@@ -177,24 +208,34 @@ function ProductCard({ product, onClick }: { product: Product; onClick: () => vo
   const isLast = totalStock > 0 && totalStock <= 3;
 
   return (
-    <div className="product-card" onClick={onClick}>
-      <div style={{ position: 'relative' }}>
+    <div onClick={onClick} style={{ cursor: 'pointer', background: '#FFF' }}>
+      {/* Фото — contain, весь товар виден */}
+      <div style={{ position: 'relative', background: '#F7F7F7', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8 }}>
         <img
-          src={product.images[0] || 'https://placehold.co/300x300/f4f4f5/999?text=Фото'}
+          src={product.images[0] || 'https://placehold.co/300x300/F7F7F7/CCC?text=Фото'}
           alt={product.name}
-          className="product-card__image"
           loading="lazy"
+          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
         />
-        <div className="product-card__badges" style={{ position: 'absolute', top: 6, left: 6, margin: 0 }}>
+        {/* Бейджи */}
+        <div style={{ position: 'absolute', top: 6, left: 6, display: 'flex', gap: 3 }}>
           {product.isNew && <span className="badge badge--new">NEW</span>}
           {product.isHot && !product.isNew && <span className="badge badge--hot">HOT</span>}
           {isLast && <span className="badge badge--last">LAST</span>}
         </div>
       </div>
-      <div className="product-card__body">
-        <div className="product-card__brand">{product.brand}</div>
-        <div className="product-card__name">{product.name}</div>
-        <div className="product-card__price">{product.price.toLocaleString('ru')} ₽</div>
+      {/* Инфо */}
+      <div style={{ padding: '8px 10px 14px' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#C9963D', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: 3, fontFamily: IB }}>
+          {product.brand}
+        </div>
+        <div style={{ fontSize: 12, color: '#0A0A0A', lineHeight: 1.4, marginBottom: 5, fontFamily: IB,
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {product.name}
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#0A0A0A', fontFamily: IB }}>
+          {product.price.toLocaleString('ru')} ₽
+        </div>
       </div>
     </div>
   );
