@@ -99,27 +99,43 @@ export default function Product() {
   }, [tg, isInTelegram, navigate]);
 
   const submitRef = useRef<() => void>(() => {});
+
   const handleAddToCart = useCallback(() => {
     if (!product || !selectedSize) return;
     addItem(product, selectedSize);
     haptic?.notificationOccurred('success');
     setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
   }, [product, selectedSize, addItem, haptic]);
+
+  const handleBuyNow = useCallback(() => {
+    if (!product || !selectedSize) return;
+    addItem(product, selectedSize);
+    haptic?.notificationOccurred('success');
+    navigate('/checkout');
+  }, [product, selectedSize, addItem, haptic, navigate]);
+
   submitRef.current = handleAddToCart;
 
+  // Telegram MainButton: после добавления меняется на «В корзину →»
   useEffect(() => {
     if (!isInTelegram || !tg || !product) return;
+    if (added) {
+      const goHandler = () => navigate('/cart');
+      tg.MainButton.setText('🛒 Перейти в корзину →');
+      tg.MainButton.show(); tg.MainButton.enable();
+      tg.MainButton.onClick(goHandler);
+      return () => tg.MainButton.offClick(goHandler);
+    }
     const handler = () => submitRef.current();
     if (selectedSize) {
-      tg.MainButton.setText(added ? '✅ Добавлено!' : `В корзину — ${product.price.toLocaleString('ru')} ₽`);
+      tg.MainButton.setText(`В корзину — ${product.price.toLocaleString('ru')} ₽`);
       tg.MainButton.show(); tg.MainButton.enable(); tg.MainButton.onClick(handler);
     } else {
       tg.MainButton.setText('Выберите размер');
       tg.MainButton.show(); tg.MainButton.disable();
     }
     return () => tg.MainButton.offClick(handler);
-  }, [tg, isInTelegram, product, selectedSize, added]);
+  }, [tg, isInTelegram, product, selectedSize, added, navigate]);
 
   /* ── Skeleton ── */
   if (isLoading || !product) {
@@ -360,34 +376,87 @@ export default function Product() {
           </button>
         </div>
 
-        {/* ══ КНОПКА В КОРЗИНУ (не в Telegram) ═══════════════════════════ */}
+        {/* ══ КНОПКИ ДЕЙСТВИЙ ═════════════════════════════════════════════ */}
         {!isInTelegram && (
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid #F0F0F0', display: 'flex', gap: 10 }}>
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid #F0F0F0' }}>
+            {/* Строка 1: В корзину + избранное */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: added ? 10 : 0 }}>
+              <button
+                onClick={handleAddToCart}
+                disabled={!selectedSize}
+                style={{
+                  flex: 1, padding: '14px 0', border: 'none',
+                  background: !selectedSize ? '#E0E0E0' : '#0A0A0A',
+                  color: !selectedSize ? '#AAA' : '#fff',
+                  fontSize: 12, fontWeight: 700, letterSpacing: '1.5px',
+                  textTransform: 'uppercase', cursor: selectedSize ? 'pointer' : 'not-allowed',
+                  fontFamily: IB, borderRadius: 2, transition: 'background 0.2s',
+                }}
+              >
+                {selectedSize ? `В КОРЗИНУ — ${product.price.toLocaleString('ru')} ₽` : 'ВЫБЕРИТЕ РАЗМЕР'}
+              </button>
+              <button
+                onClick={() => { setIsFav(f => !f); haptic?.selectionChanged(); }}
+                style={{
+                  width: 50, background: '#F5F5F5', border: '1.5px solid #E8E8E8',
+                  borderRadius: 2, fontSize: 20, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: isFav ? '#E53935' : '#999', transition: 'color 0.15s',
+                }}
+              >
+                {isFav ? '♥' : '♡'}
+              </button>
+            </div>
+
+            {/* После добавления — кнопка «Перейти в корзину» */}
+            {added && (
+              <button
+                onClick={() => navigate('/cart')}
+                style={{
+                  width: '100%', padding: '14px 0', border: '2px solid #0A0A0A',
+                  background: '#FFF', color: '#0A0A0A',
+                  fontSize: 12, fontWeight: 700, letterSpacing: '1.5px',
+                  textTransform: 'uppercase', cursor: 'pointer',
+                  fontFamily: IB, borderRadius: 2,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
+              >
+                🛒 ПЕРЕЙТИ В КОРЗИНУ →
+              </button>
+            )}
+
+            {/* Строка 2: Купить сейчас (всегда видна если размер выбран) */}
+            {selectedSize && !added && (
+              <button
+                onClick={handleBuyNow}
+                style={{
+                  width: '100%', padding: '14px 0', border: '2px solid #C9963D',
+                  background: '#FFF', color: '#8B6914',
+                  fontSize: 12, fontWeight: 700, letterSpacing: '1.5px',
+                  textTransform: 'uppercase', cursor: 'pointer',
+                  fontFamily: IB, borderRadius: 2, marginTop: 10,
+                }}
+              >
+                ⚡ КУПИТЬ СЕЙЧАС
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Кнопка «Купить сейчас» в Telegram (над MainButton) */}
+        {isInTelegram && selectedSize && !added && (
+          <div style={{ padding: '14px 16px 0', borderTop: '1px solid #F0F0F0' }}>
             <button
-              onClick={handleAddToCart}
-              disabled={!selectedSize}
+              onClick={handleBuyNow}
               style={{
-                flex: 1, padding: '15px 0', border: 'none',
-                background: !selectedSize ? '#CCCCCC' : added ? '#2E7D32' : '#0A0A0A',
-                color: '#fff', fontSize: 13, fontWeight: 700,
-                letterSpacing: '1.5px', textTransform: 'uppercase',
-                cursor: selectedSize ? 'pointer' : 'not-allowed',
-                fontFamily: IB, transition: 'background 0.2s',
-                borderRadius: 2,
+                width: '100%', padding: '14px 0', border: '2px solid #C9963D',
+                background: '#FFF', color: '#8B6914',
+                fontSize: 12, fontWeight: 700, letterSpacing: '1.5px',
+                textTransform: 'uppercase', cursor: 'pointer',
+                fontFamily: IB, borderRadius: 2,
               }}
             >
-              {added ? '✅ ДОБАВЛЕНО' : selectedSize ? `В КОРЗИНУ — ${product.price.toLocaleString('ru')} ₽` : 'ВЫБЕРИТЕ РАЗМЕР'}
-            </button>
-            <button
-              onClick={() => { setIsFav(f => !f); haptic?.selectionChanged(); }}
-              style={{
-                width: 52, background: '#F5F5F5', border: '1.5px solid #E8E8E8',
-                borderRadius: 2, fontSize: 22, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: isFav ? '#E53935' : '#999', transition: 'color 0.15s',
-              }}
-            >
-              {isFav ? '♥' : '♡'}
+              ⚡ КУПИТЬ СЕЙЧАС — {product.price.toLocaleString('ru')} ₽
             </button>
           </div>
         )}
