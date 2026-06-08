@@ -44,7 +44,7 @@ async function uploadImage(file: File): Promise<string> {
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-const BRANDS = ['Nike', 'New Balance', 'Adidas', 'On Cloud', 'Golden Goose', 'Premiata', 'Lacoste'];
+const BRANDS = ['Nike', 'Jordan', 'New Balance', 'Adidas', 'Puma', 'On Cloud', 'Golden Goose', 'Premiata', 'Lacoste'];
 const CATEGORIES = ['sneakers', 'clothing', 'bags', 'Сланцы'];
 const GENDERS = [{ v: 'male', l: 'Мужское' }, { v: 'female', l: 'Женское' }, { v: 'unisex', l: 'Унисекс' }];
 const ALL_SIZES = ['35', '35.5', '36', '36.5', '37', '37.5', '38', '38.5', '39', '39.5', '40', '40.5', '41', '41.5', '42', '42.5', '43', '43.5', '44', '44.5', '45', '45.5', '46'];

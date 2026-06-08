@@ -9,6 +9,7 @@ const BRANDS = [
   { key: 'Jordan',       label: 'JORDAN' },
   { key: 'New Balance',  label: 'NEW BALANCE' },
   { key: 'Adidas',       label: 'ADIDAS' },
+  { key: 'Puma',         label: 'PUMA' },
   { key: 'On Cloud',     label: 'ON RUNNING' },
   { key: 'Golden Goose', label: 'GOLDEN GOOSE' },
   { key: 'Premiata',     label: 'PREMIATA' },
