@@ -12,6 +12,26 @@ export function getBot(): TelegramBot | null {
   return bot;
 }
 
+const STATUS_MESSAGES: Record<string, string> = {
+  confirmed: '✅ Ваш заказ <b>#{{id}}</b> подтверждён!\n\nМы приступаем к сборке. Скоро упакуем и отправим.',
+  packed:    '📦 Заказ <b>#{{id}}</b> упакован!\n\nОстаётся только передать курьеру.',
+  shipped:   '🚀 Заказ <b>#{{id}}</b> отправлен!\n\nКурьер уже в пути — скоро будет у вас.',
+  delivered: '🎉 Заказ <b>#{{id}}</b> доставлен!\n\nСпасибо за покупку в Urban Shop Moscow. Носите с удовольствием! ❤️',
+  cancelled: '❌ Заказ <b>#{{id}}</b> отменён.\n\nЕсли есть вопросы — напишите нам.',
+};
+
+export async function notifyCustomerStatusUpdate(order: ParsedOrder, status: string): Promise<void> {
+  if (!bot) return;
+  const telegramId = order.telegramId;
+  if (!telegramId || telegramId === '0') return;
+
+  const template = STATUS_MESSAGES[status];
+  if (!template) return;
+
+  const text = template.replace('{{id}}', String(order.id));
+  await bot.sendMessage(telegramId, text, { parse_mode: 'HTML' });
+}
+
 export async function notifyManagerNewOrder(order: ParsedOrder): Promise<void> {
   const managerId = process.env.MANAGER_CHAT_ID;
   if (!bot || !managerId) return;

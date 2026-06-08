@@ -9,7 +9,7 @@ const router = Router();
 
 const orderSchema = z.object({
   customerName: z.string().min(2),
-  phone: z.string().min(10),
+  phone: z.string().min(1),
   deliveryType: z.enum(['pickup', 'delivery']),
   address: z.string().optional().default(''),
   paymentMethod: z.enum(['card', 'cash']),

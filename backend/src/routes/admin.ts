@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { db } from '../db';
-import { products, parseProduct } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { products, parseProduct, orders, parseOrder } from '../db/schema';
+import { eq, desc } from 'drizzle-orm';
+import { notifyCustomerStatusUpdate } from '../bot/notifications';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
@@ -95,6 +96,50 @@ router.delete('/products/:id', async (req: Request, res: Response) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to delete product' });
+  }
+});
+
+// ══════════════════════════════════════════════════════
+// ORDERS CRM
+// ══════════════════════════════════════════════════════
+
+// GET all orders
+router.get('/orders', async (_req: Request, res: Response) => {
+  try {
+    const rows = await db.select().from(orders).orderBy(desc(orders.id));
+    res.json(rows.map(parseOrder));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+// PUT update order status
+router.put('/orders/:id/status', async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const { status } = req.body as { status: string };
+
+    const validStatuses = ['new', 'confirmed', 'packed', 'shipped', 'delivered', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const [row] = await db.update(orders)
+      .set({ status })
+      .where(eq(orders.id, id))
+      .returning();
+
+    if (!row) return res.status(404).json({ error: 'Order not found' });
+
+    const parsed = parseOrder(row);
+    // Notify customer via Telegram bot
+    notifyCustomerStatusUpdate(parsed, status).catch(console.error);
+
+    res.json(parsed);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update status' });
   }
 });
 

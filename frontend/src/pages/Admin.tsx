@@ -392,11 +392,169 @@ function ProductModal({ product, onClose, onSave }: {
   );
 }
 
+// ── Order status config ────────────────────────────────────────────────────────
+const ORDER_STATUSES = [
+  { key: 'new',       label: 'Новый',       color: '#888',   bg: '#F5F5F5' },
+  { key: 'confirmed', label: 'Подтверждён', color: '#166534', bg: '#DCFCE7' },
+  { key: 'packed',    label: 'Упакован',    color: '#854D0E', bg: '#FEF9C3' },
+  { key: 'shipped',   label: 'Отправлен',   color: '#1E40AF', bg: '#DBEAFE' },
+  { key: 'delivered', label: 'Доставлен',   color: '#166534', bg: '#DCFCE7' },
+  { key: 'cancelled', label: 'Отменён',     color: '#991B1B', bg: '#FEE2E2' },
+];
+
+interface OrderItem { productId: number; productName: string; brand: string; size: string | number; quantity: number; price: number; image: string; }
+interface Order { id: number; telegramId: string; telegramUsername: string | null; customerName: string; phone: string; deliveryType: string; address: string | null; paymentMethod: string; items: OrderItem[]; totalAmount: number; status: string | null; comment: string | null; createdAt: string | null; }
+
+function StatusBadge({ status }: { status: string | null }) {
+  const s = ORDER_STATUSES.find(x => x.key === (status ?? 'new')) ?? ORDER_STATUSES[0];
+  return <span style={{ background: s.bg, color: s.color, padding: '3px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{s.label}</span>;
+}
+
+// ── Orders CRM ─────────────────────────────────────────────────────────────────
+function OrdersCRM() {
+  const qc = useQueryClient();
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const { data: orderList = [], isLoading } = useQuery<Order[]>({
+    queryKey: ['admin-orders'],
+    queryFn: () => adminRequest('/orders'),
+    refetchInterval: 30_000,
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      adminRequest(`/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-orders'] }),
+  });
+
+  const filtered = statusFilter === 'all'
+    ? orderList
+    : orderList.filter(o => o.status === statusFilter);
+
+  const counts = ORDER_STATUSES.reduce((acc, s) => {
+    acc[s.key] = orderList.filter(o => o.status === s.key).length;
+    return acc;
+  }, {} as Record<string, number>);
+
+  if (isLoading) return <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Загрузка заказов...</div>;
+
+  return (
+    <div>
+      {/* Stats */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        <button
+          onClick={() => setStatusFilter('all')}
+          style={{ padding: '8px 16px', border: '1.5px solid', borderColor: statusFilter === 'all' ? '#0A0A0A' : '#E0E0E0', background: statusFilter === 'all' ? '#0A0A0A' : '#fff', color: statusFilter === 'all' ? '#fff' : '#555', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+        >
+          Все ({orderList.length})
+        </button>
+        {ORDER_STATUSES.map(s => (
+          <button key={s.key}
+            onClick={() => setStatusFilter(s.key)}
+            style={{ padding: '8px 16px', border: '1.5px solid', borderColor: statusFilter === s.key ? s.color : '#E0E0E0', background: statusFilter === s.key ? s.bg : '#fff', color: statusFilter === s.key ? s.color : '#555', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+          >
+            {s.label} {counts[s.key] ? `(${counts[s.key]})` : ''}
+          </button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>Заказов нет</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {filtered.map(order => {
+            const isExpanded = expandedId === order.id;
+            const date = order.createdAt ? new Date(order.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+            return (
+              <div key={order.id} style={{ background: '#fff', border: '1.5px solid #E0E0E0' }}>
+                {/* Шапка заказа */}
+                <div
+                  onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', cursor: 'pointer' }}
+                >
+                  <div style={{ fontWeight: 700, fontSize: 14, minWidth: 70 }}>#{order.id}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{order.customerName}</div>
+                    <div style={{ fontSize: 11, color: '#888' }}>{order.phone} {order.telegramUsername ? `· @${order.telegramUsername}` : ''}</div>
+                  </div>
+                  <div style={{ textAlign: 'right', marginRight: 8 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{order.totalAmount.toLocaleString('ru')} ₽</div>
+                    <div style={{ fontSize: 11, color: '#AAA' }}>{date}</div>
+                  </div>
+                  <StatusBadge status={order.status} />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CCC" strokeWidth={2} style={{ transform: isExpanded ? 'rotate(180deg)' : 'none', transition: '0.2s', flexShrink: 0 }}>
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+
+                {/* Детали */}
+                {isExpanded && (
+                  <div style={{ borderTop: '1px solid #F0F0F0', padding: '12px 16px' }}>
+                    {/* Товары */}
+                    <div style={{ marginBottom: 12 }}>
+                      {order.items.map((item, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                          {item.image && <img src={item.image} alt="" style={{ width: 44, height: 44, objectFit: 'contain', background: '#F7F7F7', border: '1px solid #E0E0E0' }} />}
+                          <div style={{ flex: 1, fontSize: 12 }}>
+                            <div style={{ fontWeight: 600 }}>{item.brand} {item.productName}</div>
+                            <div style={{ color: '#888' }}>р.{item.size} × {item.quantity}</div>
+                          </div>
+                          <div style={{ fontWeight: 700, fontSize: 13 }}>{(item.price * item.quantity).toLocaleString('ru')} ₽</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Детали доставки */}
+                    <div style={{ fontSize: 12, color: '#555', marginBottom: 12, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      <span style={{ background: '#F5F5F5', padding: '3px 8px' }}>
+                        {order.deliveryType === 'pickup' ? '🏪 Самовывоз' : `🚚 ${order.address}`}
+                      </span>
+                      <span style={{ background: '#F5F5F5', padding: '3px 8px' }}>
+                        {order.paymentMethod === 'card' ? '💳 Карта' : '💵 Наличные'}
+                      </span>
+                      {order.comment && <span style={{ background: '#F5F5F5', padding: '3px 8px' }}>💬 {order.comment}</span>}
+                    </div>
+
+                    {/* Смена статуса */}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#888', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>Изменить статус:</div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {ORDER_STATUSES.map(s => (
+                          <button key={s.key}
+                            disabled={order.status === s.key || statusMutation.isPending}
+                            onClick={() => statusMutation.mutate({ id: order.id, status: s.key })}
+                            style={{
+                              padding: '7px 14px', border: '1.5px solid',
+                              borderColor: order.status === s.key ? s.color : '#E0E0E0',
+                              background: order.status === s.key ? s.bg : '#fff',
+                              color: order.status === s.key ? s.color : '#555',
+                              fontSize: 12, fontWeight: 600, cursor: order.status === s.key ? 'default' : 'pointer',
+                              opacity: order.status === s.key ? 1 : 0.8,
+                            }}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main Admin page ────────────────────────────────────────────────────────────
 export default function Admin() {
   const [authed, setAuthed] = useState(() => !!localStorage.getItem('admin_password'));
   const [editProduct, setEditProduct] = useState<Product | null | 'new'>(null);
   const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders'>('orders');
   const qc = useQueryClient();
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
@@ -433,7 +591,6 @@ export default function Admin() {
       <div style={{ background: '#0A0A0A', color: '#fff', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, letterSpacing: 2 }}>URBAN SHOP — ADMIN</div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ fontSize: 12, color: '#888' }}>{products.length} товаров</span>
           <button
             onClick={() => { localStorage.removeItem('admin_password'); setAuthed(false); }}
             style={{ background: 'none', border: '1px solid #444', color: '#aaa', padding: '6px 14px', fontSize: 11, cursor: 'pointer', letterSpacing: 1 }}
@@ -441,8 +598,31 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div style={{ background: '#fff', borderBottom: '1.5px solid #E0E0E0', display: 'flex', padding: '0 24px' }}>
+        {[
+          { key: 'orders', label: '📦 Заказы (CRM)' },
+          { key: 'products', label: '👟 Товары' },
+        ].map(tab => (
+          <button key={tab.key}
+            onClick={() => setActiveTab(tab.key as 'orders' | 'products')}
+            style={{
+              padding: '14px 20px', border: 'none', background: 'none', cursor: 'pointer',
+              fontSize: 13, fontWeight: 700, letterSpacing: 0.5,
+              color: activeTab === tab.key ? '#0A0A0A' : '#888',
+              borderBottom: activeTab === tab.key ? '2.5px solid #0A0A0A' : '2.5px solid transparent',
+              marginBottom: -1.5,
+            }}
+          >{tab.label}</button>
+        ))}
+      </div>
+
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
-        {/* Actions bar */}
+        {/* ── ЗАКАЗЫ ── */}
+        {activeTab === 'orders' && <OrdersCRM />}
+
+        {/* ── ТОВАРЫ ── */}
+        {activeTab === 'products' && <>
         <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
           <input
             placeholder="Поиск по названию или бренду..."
@@ -504,6 +684,7 @@ export default function Admin() {
             ))}
           </div>
         )}
+        </>}
       </div>
 
       {/* Modal */}
