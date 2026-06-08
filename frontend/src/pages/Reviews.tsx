@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useTelegram } from '../hooks/useTelegram';
@@ -297,6 +299,7 @@ function DbReviewCard({ review }: { review: Review }) {
 
 /* ── Главный экран ── */
 export default function Reviews() {
+  const navigate = useNavigate();
   const { user } = useTelegram();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -316,6 +319,8 @@ export default function Reviews() {
   const total = ALL_REVIEWS.length + reviews.length;
 
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <PageHeader title="Отзывы" onBack={() => navigate('/')} />
     <div className="page-scroll" style={{ paddingBottom: 80 }}>
 
       {/* Шапка */}
@@ -395,6 +400,7 @@ export default function Reviews() {
       )}
 
       <div style={{ height: 20 }} />
+    </div>
     </div>
   );
 }

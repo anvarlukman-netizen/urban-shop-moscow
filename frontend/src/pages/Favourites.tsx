@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import type { Product } from '../types';
+import PageHeader from '../components/PageHeader';
 
 export default function Favourites() {
   const navigate = useNavigate();
@@ -54,6 +55,8 @@ export default function Favourites() {
   }
 
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <PageHeader title="Избранное" onBack={() => navigate('/')} />
     <div className="page-scroll">
       <div style={{ padding: '16px 16px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tgui--text_color)' }}>Избранное</div>
@@ -70,6 +73,7 @@ export default function Favourites() {
         ))}
       </div>
       <div style={{ height: 16 }} />
+    </div>
     </div>
   );
 }

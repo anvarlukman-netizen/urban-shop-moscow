@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/cart';
 import { useTelegram } from '../hooks/useTelegram';
+import PageHeader from '../components/PageHeader';
 
 const RESERVE_MINUTES = 15;
 
@@ -54,8 +55,12 @@ export default function Cart() {
     return () => { tg?.BackButton.hide(); tg?.MainButton.hide(); };
   }, [tg, navigate]);
 
+  const isInTelegram = Boolean(tg?.initData);
+
   if (items.length === 0) {
     return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {!isInTelegram && <PageHeader title="Корзина" onBack={() => navigate(-1)} />}
       <div className="page-scroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh' }}>
         <div style={{ fontSize: 56, marginBottom: 16 }}>🛒</div>
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: 'var(--tgui--text_color)' }}>Корзина пуста</div>
@@ -71,10 +76,13 @@ export default function Cart() {
           Перейти в каталог
         </button>
       </div>
+      </div>
     );
   }
 
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    {!isInTelegram && <PageHeader title="Корзина" />}
     <div className="page-scroll" style={{ paddingBottom: 100 }}>
       {/* Заголовок */}
       <div style={{ padding: '16px 16px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -166,6 +174,7 @@ export default function Cart() {
           </button>
         </div>
       )}
+    </div>
     </div>
   );
 }

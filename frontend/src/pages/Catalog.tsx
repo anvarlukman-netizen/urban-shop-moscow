@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/client';
 import type { Category, Gender, Product } from '../types';
+import PageHeader from '../components/PageHeader';
 
 const IB = "'Inter', sans-serif";
 
@@ -68,6 +69,8 @@ export default function Catalog() {
   };
 
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <PageHeader title="Каталог" onBack={() => navigate('/')} />
     <div className="page-scroll">
 
       {/* ── Поиск ── */}
@@ -199,6 +202,7 @@ export default function Catalog() {
       )}
 
       <div style={{ height: 20 }} />
+    </div>
     </div>
   );
 }

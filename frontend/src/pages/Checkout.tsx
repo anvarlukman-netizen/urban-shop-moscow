@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useCartStore } from '../store/cart';
 import { useTelegram } from '../hooks/useTelegram';
+import PageHeader from '../components/PageHeader';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -97,10 +98,14 @@ export default function Checkout() {
   });
 
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {!isInTelegram && <PageHeader title="Оформление заказа" />}
     <div className="page-scroll" style={{ paddingBottom: 100 }}>
-      <div style={{ padding: '16px 16px 20px', fontSize: 20, fontWeight: 700, color: 'var(--tgui--text_color)' }}>
-        Оформление заказа
-      </div>
+      {isInTelegram && (
+        <div style={{ padding: '16px 16px 20px', fontSize: 20, fontWeight: 700, color: 'var(--tgui--text_color)' }}>
+          Оформление заказа
+        </div>
+      )}
 
       {/* Имя */}
       <div className="form-section">
@@ -232,6 +237,7 @@ export default function Checkout() {
           </button>
         </div>
       )}
+    </div>
     </div>
   );
 }
